@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mitochondrial Dynamics — Lateral Line Lab</title>
+<link rel="stylesheet" href="css/style.css" />
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <h1>Mitochondrial Dynamics</h1>
+    <p class="page-lede">
+      Mitochondria are not static — they constantly fuse, split, and reshape. This section
+      tracks how that behavior changes after cisplatin exposure: 3D timelapse models paired
+      with matching video across dose and timepoint, donut-shaped mitochondria forming and
+      dissolving, and reference examples of normal fusion and fission for comparison.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+
+    <div class="tab-bar" id="main-tabs">
+      <button class="ctrl active" data-tab="timelapse">Cisplatin Timelapse</button>
+      <button class="ctrl" data-tab="donuts">Donut Formation</button>
+      <button class="ctrl" data-tab="control">Control Examples</button>
+    </div>
+
+    <!-- ===================== CISPLATIN TIMELAPSE ===================== -->
+    <div class="tab-panel" id="panel-timelapse">
+
+      <div class="control-label">Timepoint</div>
+      <div class="sub-tab-bar" id="timepoint-buttons"></div>
+
+      <div class="control-label">Dose</div>
+      <div class="sub-tab-bar" id="dose-buttons"></div>
+
+      <div class="viewer-video-row">
+        <model-viewer
+          id="timelapse-viewer"
+          src=""
+          alt="3D mitochondrial timelapse model"
+          camera-controls
+          auto-rotate
+          shadow-intensity="1"
+          exposure="1"
+          touch-action="pan-y">
+        </model-viewer>
+
+        <div class="video-stack" id="timelapse-video-stack"></div>
+      </div>
+
+    </div>
+
+    <!-- ===================== DONUT FORMATION ===================== -->
+    <div class="tab-panel" id="panel-donuts" style="display:none;">
+
+      <div class="sub-tab-bar" id="donut-mode-buttons">
+        <button class="ctrl active" data-mode="videos">Videos</button>
+        <button class="ctrl" data-mode="models">3D Models</button>
+      </div>
+
+      <!-- Donut videos -->
+      <div id="donut-videos-section">
+        <div class="control-label">Choose video type</div>
+        <div class="sub-tab-bar" id="donut-video-buttons"></div>
+
+        <div class="video-stack single-viewer" id="donut-video-stack"></div>
+      </div>
+
+      <!-- Donut models -->
+      <div id="donut-models-section" style="display:none;">
+        <div class="control-label">Choose a model</div>
+        <div class="sub-tab-bar" id="donut-model-buttons"></div>
+
+        <div class="single-viewer">
+          <model-viewer
+            id="donut-viewer"
+            src=""
+            alt="3D donut mitochondria model"
+            camera-controls
+            auto-rotate
+            shadow-intensity="1"
+            exposure="1"
+            touch-action="pan-y">
+          </model-viewer>
+        </div>
+
+        <div class="info-box" id="donut-model-description">
+          Select a model to see its description.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================== CONTROL EXAMPLES ===================== -->
+    <div class="tab-panel" id="panel-control" style="display:none;">
+
+      <div class="control-label">Choose an example</div>
+      <div class="sub-tab-bar" id="control-buttons"></div>
+
+      <div class="video-stack single-viewer" id="control-video-stack"></div>
+
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer">
+  <div class="wrap">
+    <span>Lateral Line Lab</span>
+    <span>Mitochondrial dynamics</span>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script>
+/* ============================================================
+   Data
+   ============================================================ */
+
+const MODEL_BASE = 'assets/mitochondrial-dynamics/models';
+
+const timelapseData = {
+  '0HR': [
+    { label: '30 µM', model: `${MODEL_BASE}/timelapse/0HR_30cis_timelapse_z.glb`, video: 'PPgnb7jVyTw' },
+    { label: '100 µM', model: `${MODEL_BASE}/timelapse/0HR_100cis_timelapse_z.glb`, video: 'V-o-g-r7VAw' },
+    { label: '300 µM', model: `${MODEL_BASE}/timelapse/0HR_300cis_timelapse_z.glb`, video: 'vyoOUdkt2g4' },
+  ],
+  '6HR': [
+    { label: '30 µM', model: `${MODEL_BASE}/timelapse/6HR_30cis_timelapse_z.glb`, video: '0tYk-JrA_eU' },
+    { label: '100 µM', model: `${MODEL_BASE}/timelapse/6HR_100cis_timelapse_z.glb`, video: '7HaoWD1l95Q' },
+    { label: '300 µM', model: `${MODEL_BASE}/timelapse/6HR_300cis_timelapse_z.glb`, video: 'SXqw-uGKpcs' },
+  ],
+  '24HR': [
+    { label: '30 µM', model: `${MODEL_BASE}/timelapse/24HR_30cis_timelapse_z.glb`, video: 'rIRaMQCrBYU' },
+    { label: '100 µM', model: `${MODEL_BASE}/timelapse/24HR_100cis_timelapse_z.glb`, video: 'E14wngHJKH4' },
+    { label: '300 µM', model: `${MODEL_BASE}/timelapse/24HR_300cis_timelapse_z.glb`, video: 'J3KHXilgRpw' },
+  ],
+};
+
+const donutVideos = [
+  { key: 'formation', label: 'Formation', video: 'pM2gTRgaQTQ' },
+  { key: 'dissolution', label: 'Dissolution', video: 'qsO8QkXQbwI' },
+  { key: 'dynamic', label: 'Dynamic', video: '8l_oygUWzW4' },
+];
+
+const donutModels = [
+  { label: 'Model 1', file: `${MODEL_BASE}/donuts/300_24_live_donut_highlighted.glb`, desc: '300 µM cisplatin, 24 hours recovery.' },
+  { label: 'Model 2', file: `${MODEL_BASE}/donuts/30_24_live_donut_highlighted.glb`, desc: '30 µM cisplatin, 24 hours recovery.' },
+  { label: 'Model 3', file: `${MODEL_BASE}/donuts/30_6HR_donuts.glb`, desc: '30 µM cisplatin, 6 hours recovery.' },
+];
+
+const controlVideos = [
+  { key: 'fusion', label: 'Fusion', video: 'Bl_DnE48yRM' },
+  { key: 'fission', label: 'Fission', video: 'DldJT74aJJ4' },
+  { key: 'extend', label: 'Extend & Retract', video: 'T92gjzNiXs8' },
+];
+
+function youtubeEmbed(id) {
+  return `<iframe src="https://www.youtube.com/embed/${id}" allowfullscreen></iframe>`;
+}
+
+/* ============================================================
+   Main tabs
+   ============================================================ */
+
+const mainTabButtons = document.querySelectorAll('#main-tabs button');
+const panels = {
+  timelapse: document.getElementById('panel-timelapse'),
+  donuts: document.getElementById('panel-donuts'),
+  control: document.getElementById('panel-control'),
+};
+
+mainTabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    mainTabButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.entries(panels).forEach(([key, el]) => {
+      el.style.display = key === btn.dataset.tab ? 'block' : 'none';
+    });
+  });
+});
+
+/* ============================================================
+   Cisplatin Timelapse
+   ============================================================ */
+
+const timelapseViewer = document.getElementById('timelapse-viewer');
+const timepointButtons = document.getElementById('timepoint-buttons');
+const doseButtons = document.getElementById('dose-buttons');
+const timelapseVideoStack = document.getElementById('timelapse-video-stack');
+
+let currentTimepoint = '0HR';
+
+Object.keys(timelapseData).forEach((tp) => {
+  const btn = document.createElement('button');
+  btn.className = 'ctrl';
+  btn.textContent = tp;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#timepoint-buttons button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTimepoint = tp;
+    renderDoseButtons();
+  });
+  timepointButtons.appendChild(btn);
+});
+
+function renderDoseButtons() {
+  doseButtons.innerHTML = '';
+  timelapseData[currentTimepoint].forEach((entry, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'ctrl';
+    btn.textContent = entry.label;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#dose-buttons button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      setTimelapseEntry(entry);
+    });
+    if (idx === 0) btn.classList.add('active');
+    doseButtons.appendChild(btn);
+  });
+  setTimelapseEntry(timelapseData[currentTimepoint][0]);
+}
+
+function setTimelapseEntry(entry) {
+  timelapseViewer.src = entry.model;
+  timelapseVideoStack.innerHTML = `<div class="video-frame active">${youtubeEmbed(entry.video)}</div>`;
+}
+
+timepointButtons.querySelector('button')?.classList.add('active');
+renderDoseButtons();
+
+/* ============================================================
+   Donut Formation
+   ============================================================ */
+
+const donutModeButtons = document.querySelectorAll('#donut-mode-buttons button');
+const donutVideosSection = document.getElementById('donut-videos-section');
+const donutModelsSection = document.getElementById('donut-models-section');
+
+donutModeButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    donutModeButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    const showVideos = btn.dataset.mode === 'videos';
+    donutVideosSection.style.display = showVideos ? 'block' : 'none';
+    donutModelsSection.style.display = showVideos ? 'none' : 'block';
+  });
+});
+
+// Donut videos
+const donutVideoButtons = document.getElementById('donut-video-buttons');
+const donutVideoStack = document.getElementById('donut-video-stack');
+
+donutVideos.forEach((v, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'ctrl';
+  btn.textContent = v.label;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#donut-video-buttons button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    donutVideoStack.innerHTML = `<div class="video-frame active">${youtubeEmbed(v.video)}</div>`;
+  });
+  if (idx === 0) btn.classList.add('active');
+  donutVideoButtons.appendChild(btn);
+});
+donutVideoStack.innerHTML = `<div class="video-frame active">${youtubeEmbed(donutVideos[0].video)}</div>`;
+
+// Donut models
+const donutModelButtons = document.getElementById('donut-model-buttons');
+const donutViewer = document.getElementById('donut-viewer');
+const donutModelDescription = document.getElementById('donut-model-description');
+
+donutModels.forEach((m, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'ctrl';
+  btn.textContent = m.label;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#donut-model-buttons button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    donutViewer.src = m.file;
+    donutModelDescription.textContent = m.desc;
+  });
+  if (idx === 0) btn.classList.add('active');
+  donutModelButtons.appendChild(btn);
+});
+donutViewer.src = donutModels[0].file;
+donutModelDescription.textContent = donutModels[0].desc;
+
+/* ============================================================
+   Control Examples
+   ============================================================ */
+
+const controlButtonsEl = document.getElementById('control-buttons');
+const controlVideoStack = document.getElementById('control-video-stack');
+
+controlVideos.forEach((v, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'ctrl';
+  btn.textContent = v.label;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#control-buttons button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    controlVideoStack.innerHTML = `<div class="video-frame active">${youtubeEmbed(v.video)}</div>`;
+  });
+  if (idx === 0) btn.classList.add('active');
+  controlButtonsEl.appendChild(btn);
+});
+controlVideoStack.innerHTML = `<div class="video-frame active">${youtubeEmbed(controlVideos[0].video)}</div>`;
+</script>
+
+</body>
+</html>
