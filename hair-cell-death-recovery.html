@@ -37,6 +37,74 @@
     width: 100%;
     border-radius: 10px;
   }
+
+  /* ---------- Grid view modes ---------- */
+
+  .grid-scroll {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .grid-cell {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: var(--color-deep);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .grid-cell img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+  }
+
+  .grid-cell .grid-cell-label {
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: var(--color-ink-soft);
+    text-align: center;
+    padding: 5px 4px;
+    background: #fff;
+  }
+
+  .strip-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+    min-width: 640px;
+  }
+
+  .full-grid {
+    display: grid;
+    grid-template-columns: 150px repeat(5, minmax(120px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    min-width: 820px;
+    align-items: center;
+  }
+
+  .full-grid .grid-corner {}
+
+  .full-grid .grid-col-header {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    text-align: center;
+    padding: 4px;
+  }
+
+  .full-grid .grid-row-header {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    text-align: right;
+    padding-right: 10px;
+  }
 </style>
 </head>
 <body>
@@ -66,16 +134,54 @@
     <!-- ===================== Z-PROJECTION IMAGES ===================== -->
     <div class="tab-panel" id="panel-images">
 
-      <div class="control-label">Timepoint</div>
-      <div class="sub-tab-bar" id="image-timepoint-buttons"></div>
-
-      <div class="control-label">Dose</div>
-      <div class="sub-tab-bar" id="image-dose-buttons"></div>
-
-      <div class="hc-image-frame">
-        <img id="hc-image" src="" alt="Neuromast z-projection" />
+      <div class="control-label">View</div>
+      <div class="sub-tab-bar" id="view-mode-buttons">
+        <button class="ctrl active" data-mode="single">Single image</button>
+        <button class="ctrl" data-mode="by-treatment">One treatment, all timepoints</button>
+        <button class="ctrl" data-mode="by-timepoint">One timepoint, all treatments</button>
+        <button class="ctrl" data-mode="full-grid">Full grid</button>
       </div>
-      <div class="hc-caption" id="hc-image-caption"></div>
+
+      <!-- Single image mode -->
+      <div id="mode-single">
+        <div class="control-label">Timepoint</div>
+        <div class="sub-tab-bar" id="image-timepoint-buttons"></div>
+
+        <div class="control-label">Dose</div>
+        <div class="sub-tab-bar" id="image-dose-buttons"></div>
+
+        <div class="hc-image-frame">
+          <img id="hc-image" src="" alt="Neuromast z-projection" />
+        </div>
+        <div class="hc-caption" id="hc-image-caption"></div>
+      </div>
+
+      <!-- One treatment across all timepoints -->
+      <div id="mode-by-treatment" style="display:none;">
+        <div class="control-label">Choose a treatment</div>
+        <div class="sub-tab-bar" id="treatment-select-buttons"></div>
+
+        <div class="grid-scroll">
+          <div class="strip-grid" id="by-treatment-grid"></div>
+        </div>
+      </div>
+
+      <!-- One timepoint across all treatments -->
+      <div id="mode-by-timepoint" style="display:none;">
+        <div class="control-label">Choose a timepoint</div>
+        <div class="sub-tab-bar" id="timepoint-select-buttons"></div>
+
+        <div class="grid-scroll">
+          <div class="strip-grid" id="by-timepoint-grid"></div>
+        </div>
+      </div>
+
+      <!-- Full grid -->
+      <div id="mode-full-grid" style="display:none;">
+        <div class="grid-scroll">
+          <div class="full-grid" id="full-grid"></div>
+        </div>
+      </div>
 
     </div>
 
@@ -149,8 +255,38 @@ mainTabButtons.forEach((btn) => {
 });
 
 /* ============================================================
-   Timepoint / dose controls
+   View mode switching
    ============================================================ */
+
+const viewModeButtons = document.querySelectorAll('#view-mode-buttons button');
+const modePanels = {
+  single: document.getElementById('mode-single'),
+  'by-treatment': document.getElementById('mode-by-treatment'),
+  'by-timepoint': document.getElementById('mode-by-timepoint'),
+  'full-grid': document.getElementById('mode-full-grid'),
+};
+
+viewModeButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    viewModeButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.entries(modePanels).forEach(([key, el]) => {
+      el.style.display = key === btn.dataset.mode ? 'block' : 'none';
+    });
+  });
+});
+
+function gridCellHtml(tp, dose) {
+  const path = imagePath(tp, dose.key);
+  return `
+    <a class="grid-cell" href="${path}" target="_blank" rel="noopener">
+      <img src="${path}" alt="${dose.label} at ${tp}" loading="lazy" />
+      <span class="grid-cell-label">${dose.label}<br>${tp}</span>
+    </a>
+  `;
+}
+
+/* ---------- Mode: single image ---------- */
 
 const timepointContainer = document.getElementById('image-timepoint-buttons');
 const doseContainer = document.getElementById('image-dose-buttons');
@@ -196,6 +332,72 @@ function setImage(tp, dose) {
 }
 
 renderDoses();
+
+/* ---------- Mode: one treatment, all timepoints ---------- */
+
+const treatmentSelectButtons = document.getElementById('treatment-select-buttons');
+const byTreatmentGrid = document.getElementById('by-treatment-grid');
+
+DOSES.forEach((dose, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'ctrl';
+  btn.textContent = dose.label;
+  btn.addEventListener('click', () => {
+    treatmentSelectButtons.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderByTreatment(dose);
+  });
+  if (idx === 0) btn.classList.add('active');
+  treatmentSelectButtons.appendChild(btn);
+});
+
+function renderByTreatment(dose) {
+  byTreatmentGrid.innerHTML = TIMEPOINTS.map((tp) => gridCellHtml(tp, dose)).join('');
+}
+
+renderByTreatment(DOSES[0]);
+
+/* ---------- Mode: one timepoint, all treatments ---------- */
+
+const timepointSelectButtons = document.getElementById('timepoint-select-buttons');
+const byTimepointGrid = document.getElementById('by-timepoint-grid');
+
+TIMEPOINTS.forEach((tp, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'ctrl';
+  btn.textContent = tp;
+  btn.addEventListener('click', () => {
+    timepointSelectButtons.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderByTimepoint(tp);
+  });
+  if (idx === 0) btn.classList.add('active');
+  timepointSelectButtons.appendChild(btn);
+});
+
+function renderByTimepoint(tp) {
+  byTimepointGrid.innerHTML = DOSES.map((dose) => gridCellHtml(tp, dose)).join('');
+}
+
+renderByTimepoint(TIMEPOINTS[0]);
+
+/* ---------- Mode: full grid ---------- */
+
+const fullGrid = document.getElementById('full-grid');
+
+function renderFullGrid() {
+  let html = '<div class="grid-corner"></div>';
+  html += TIMEPOINTS.map((tp) => `<div class="grid-col-header">${tp}</div>`).join('');
+
+  DOSES.forEach((dose) => {
+    html += `<div class="grid-row-header">${dose.label}</div>`;
+    html += TIMEPOINTS.map((tp) => gridCellHtml(tp, dose)).join('');
+  });
+
+  fullGrid.innerHTML = html;
+}
+
+renderFullGrid();
 </script>
 
 </body>
