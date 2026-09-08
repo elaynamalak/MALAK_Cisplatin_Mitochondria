@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hair Cell Death &amp; Recovery — Lateral Line Lab</title>
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  .hc-image-frame {
+    max-width: 700px;
+    aspect-ratio: 1 / 1;
+    background: var(--color-deep);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hc-image-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .hc-caption {
+    margin-top: 14px;
+    font-size: 0.9rem;
+    color: var(--color-ink-faint);
+  }
+
+  .quant-image {
+    max-width: 800px;
+  }
+
+  .quant-image img {
+    width: 100%;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <h1>Hair Cell Death &amp; Recovery</h1>
+    <p class="page-lede">
+      This is the starting point for everything else in the site: what happens to the hair
+      cells themselves. Z-projection images track neuromasts across cisplatin dose and
+      recovery time, alongside neomycin as a second ototoxic drug for comparison, with
+      quantification of hair cell survival across the full time course.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+
+    <div class="tab-bar" id="main-tabs">
+      <button class="ctrl active" data-tab="images">Z-Projection Images</button>
+      <button class="ctrl" data-tab="quant">Quantification</button>
+    </div>
+
+    <!-- ===================== Z-PROJECTION IMAGES ===================== -->
+    <div class="tab-panel" id="panel-images">
+
+      <div class="control-label">Timepoint</div>
+      <div class="sub-tab-bar" id="image-timepoint-buttons"></div>
+
+      <div class="control-label">Dose</div>
+      <div class="sub-tab-bar" id="image-dose-buttons"></div>
+
+      <div class="hc-image-frame">
+        <img id="hc-image" src="" alt="Neuromast z-projection" />
+      </div>
+      <div class="hc-caption" id="hc-image-caption"></div>
+
+    </div>
+
+    <!-- ===================== QUANTIFICATION ===================== -->
+    <div class="tab-panel" id="panel-quant" style="display:none;">
+
+      <div class="quant-image">
+        <img src="assets/hair-cell-death-recovery/images/quantification.png" alt="Quantification of hair cell survival across dose and timepoint" />
+      </div>
+
+      <div class="info-box">
+        <h3>Quantification</h3>
+        <p>
+          Hair cell counts per neuromast across cisplatin and neomycin doses and recovery
+          timepoints, normalized to control.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer">
+  <div class="wrap">
+    <span>Lateral Line Lab</span>
+    <span>Hair cell death and recovery</span>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script>
+/* ============================================================
+   Config
+   ============================================================ */
+
+const TIMEPOINTS = ['0HR', '24HR', '48HR', '72HR', '96HR'];
+
+const DOSES = [
+  { key: 'dmso', label: 'DMSO' },
+  { key: '100cis', label: '100 µM Cisplatin' },
+  { key: '300cis', label: '300 µM Cisplatin' },
+  { key: '1mmcis', label: '1 mM Cisplatin' },
+  { key: '100neo', label: '100 µM Neomycin' },
+];
+
+const IMAGE_BASE = 'assets/hair-cell-death-recovery/images';
+
+function imagePath(tp, doseKey) {
+  return `${IMAGE_BASE}/${tp}_${doseKey}_zproj.png`;
+}
+
+/* ============================================================
+   Main tabs
+   ============================================================ */
+
+const mainTabButtons = document.querySelectorAll('#main-tabs button');
+const panels = {
+  images: document.getElementById('panel-images'),
+  quant: document.getElementById('panel-quant'),
+};
+
+mainTabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    mainTabButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.entries(panels).forEach(([key, el]) => {
+      el.style.display = key === btn.dataset.tab ? 'block' : 'none';
+    });
+  });
+});
+
+/* ============================================================
+   Timepoint / dose controls
+   ============================================================ */
+
+const timepointContainer = document.getElementById('image-timepoint-buttons');
+const doseContainer = document.getElementById('image-dose-buttons');
+const hcImage = document.getElementById('hc-image');
+const hcImageCaption = document.getElementById('hc-image-caption');
+
+let currentTimepoint = TIMEPOINTS[0];
+
+TIMEPOINTS.forEach((tp) => {
+  const btn = document.createElement('button');
+  btn.className = 'ctrl';
+  btn.textContent = tp;
+  btn.addEventListener('click', () => {
+    timepointContainer.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTimepoint = tp;
+    renderDoses();
+  });
+  timepointContainer.appendChild(btn);
+});
+timepointContainer.querySelector('button').classList.add('active');
+
+function renderDoses() {
+  doseContainer.innerHTML = '';
+  DOSES.forEach((dose, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'ctrl';
+    btn.textContent = dose.label;
+    btn.addEventListener('click', () => {
+      doseContainer.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      setImage(currentTimepoint, dose);
+    });
+    if (idx === 0) btn.classList.add('active');
+    doseContainer.appendChild(btn);
+  });
+  setImage(currentTimepoint, DOSES[0]);
+}
+
+function setImage(tp, dose) {
+  hcImage.src = imagePath(tp, dose.key);
+  hcImageCaption.textContent = `${dose.label} — ${tp}`;
+}
+
+renderDoses();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mitochondrial Morphology — Lateral Line Lab</title>
+<link rel="stylesheet" href="css/style.css" />
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<style>
+  .morph-image-frame {
+    max-width: 700px;
+    aspect-ratio: 1 / 1;
+    background: var(--color-deep);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .morph-image-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .morph-caption {
+    margin-top: 14px;
+    font-size: 0.9rem;
+    color: var(--color-ink-faint);
+  }
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <h1>Morphology</h1>
+    <p class="page-lede">
+      Beyond how mitochondria move, cisplatin changes what they look like — swelling,
+      fragmenting, or forming donut shapes depending on dose and how long the cell has had
+      to recover. This section pairs z-projection images with matching 3D models across
+      concentration and timepoint, including neomycin as a second ototoxic comparison.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+
+    <div class="tab-bar" id="main-tabs">
+      <button class="ctrl active" data-tab="images">Z-Projection Images</button>
+      <button class="ctrl" data-tab="models">3D Models</button>
+    </div>
+
+    <!-- ===================== Z-PROJECTION IMAGES ===================== -->
+    <div class="tab-panel" id="panel-images">
+
+      <div class="control-label">Timepoint</div>
+      <div class="sub-tab-bar" id="image-timepoint-buttons"></div>
+
+      <div class="control-label">Dose</div>
+      <div class="sub-tab-bar" id="image-dose-buttons"></div>
+
+      <div class="morph-image-frame">
+        <img id="morph-image" src="" alt="Mitochondrial z-projection" />
+      </div>
+      <div class="morph-caption" id="morph-image-caption"></div>
+
+    </div>
+
+    <!-- ===================== 3D MODELS ===================== -->
+    <div class="tab-panel" id="panel-models" style="display:none;">
+
+      <div class="control-label">Timepoint</div>
+      <div class="sub-tab-bar" id="model-timepoint-buttons"></div>
+
+      <div class="control-label">Dose</div>
+      <div class="sub-tab-bar" id="model-dose-buttons"></div>
+
+      <div class="single-viewer">
+        <model-viewer
+          id="morph-viewer"
+          src=""
+          alt="3D mitochondrial morphology model"
+          camera-controls
+          auto-rotate
+          shadow-intensity="1"
+          exposure="1"
+          touch-action="pan-y">
+        </model-viewer>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer">
+  <div class="wrap">
+    <span>Lateral Line Lab</span>
+    <span>Mitochondrial morphology</span>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script>
+/* ============================================================
+   Shared dose / timepoint config
+   ============================================================ */
+
+const TIMEPOINTS = ['0HR', '6HR', '24HR', '48HR'];
+
+const DOSES = [
+  { key: 'dmso', label: 'DMSO' },
+  { key: '30cis', label: '30 µM Cisplatin' },
+  { key: '100cis', label: '100 µM Cisplatin' },
+  { key: '300cis', label: '300 µM Cisplatin' },
+  { key: '1mmcis', label: '1 mM Cisplatin' },
+  { key: '100neo', label: '100 µM Neomycin' },
+];
+
+const IMAGE_BASE = 'assets/mitochondrial-morphology/images';
+const MODEL_BASE = 'assets/mitochondrial-morphology/models';
+
+function imagePath(tp, doseKey) {
+  return `${IMAGE_BASE}/${tp}_${doseKey}_zproj.png`;
+}
+
+function modelPath(tp, doseKey) {
+  return `${MODEL_BASE}/${tp}_${doseKey}.glb`;
+}
+
+/* ============================================================
+   Main tabs
+   ============================================================ */
+
+const mainTabButtons = document.querySelectorAll('#main-tabs button');
+const panels = {
+  images: document.getElementById('panel-images'),
+  models: document.getElementById('panel-models'),
+};
+
+mainTabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    mainTabButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.entries(panels).forEach(([key, el]) => {
+      el.style.display = key === btn.dataset.tab ? 'block' : 'none';
+    });
+  });
+});
+
+/* ============================================================
+   Reusable timepoint/dose control builder
+   ============================================================ */
+
+function buildControls(timepointContainer, doseContainer, onSelect) {
+  let currentTimepoint = TIMEPOINTS[0];
+
+  TIMEPOINTS.forEach((tp) => {
+    const btn = document.createElement('button');
+    btn.className = 'ctrl';
+    btn.textContent = tp;
+    btn.addEventListener('click', () => {
+      timepointContainer.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTimepoint = tp;
+      renderDoses();
+    });
+    timepointContainer.appendChild(btn);
+  });
+  timepointContainer.querySelector('button').classList.add('active');
+
+  function renderDoses() {
+    doseContainer.innerHTML = '';
+    DOSES.forEach((dose, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'ctrl';
+      btn.textContent = dose.label;
+      btn.addEventListener('click', () => {
+        doseContainer.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        onSelect(currentTimepoint, dose);
+      });
+      if (idx === 0) btn.classList.add('active');
+      doseContainer.appendChild(btn);
+    });
+    onSelect(currentTimepoint, DOSES[0]);
+  }
+
+  renderDoses();
+}
+
+/* ============================================================
+   Z-projection images
+   ============================================================ */
+
+const morphImage = document.getElementById('morph-image');
+const morphImageCaption = document.getElementById('morph-image-caption');
+
+buildControls(
+  document.getElementById('image-timepoint-buttons'),
+  document.getElementById('image-dose-buttons'),
+  (tp, dose) => {
+    morphImage.src = imagePath(tp, dose.key);
+    morphImageCaption.textContent = `${dose.label} — ${tp}`;
+  }
+);
+
+/* ============================================================
+   3D models
+   ============================================================ */
+
+const morphViewer = document.getElementById('morph-viewer');
+
+buildControls(
+  document.getElementById('model-timepoint-buttons'),
+  document.getElementById('model-dose-buttons'),
+  (tp, dose) => {
+    morphViewer.src = modelPath(tp, dose.key);
+  }
+);
+</script>
+
+</body>
+</html>

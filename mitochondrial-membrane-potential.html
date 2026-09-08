@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Membrane Potential — Lateral Line Lab</title>
+<link rel="stylesheet" href="css/style.css" />
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<style>
+  .tmre-toggle-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 14px;
+  }
+
+  .quant-image {
+    max-width: 800px;
+  }
+
+  .quant-image img {
+    width: 100%;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div class="wrap">
+    <h1>Membrane Potential</h1>
+    <p class="page-lede">
+      TMRE is a dye that accumulates in mitochondria in proportion to their membrane
+      potential — brighter signal means a healthier, more polarized mitochondrion. These
+      models overlay TMRE signal onto mitochondrial shape across cisplatin dose and
+      recovery timepoint, so you can see how potential drops and recovers alongside
+      structure.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+
+    <div class="tab-bar" id="main-tabs">
+      <button class="ctrl active" data-tab="tmre">TMRE Models</button>
+      <button class="ctrl" data-tab="quant">Quantification</button>
+    </div>
+
+    <!-- ===================== TMRE MODELS ===================== -->
+    <div class="tab-panel" id="panel-tmre">
+
+      <div class="control-label">Timepoint</div>
+      <div class="sub-tab-bar" id="timepoint-buttons"></div>
+
+      <div class="control-label">Dose</div>
+      <div class="sub-tab-bar" id="dose-buttons"></div>
+
+      <div class="single-viewer">
+        <model-viewer
+          id="viewer"
+          src=""
+          alt="3D mitochondrial membrane potential model"
+          camera-controls
+          auto-rotate
+          shadow-intensity="1"
+          exposure="1"
+          touch-action="pan-y">
+        </model-viewer>
+      </div>
+
+      <div class="tmre-toggle-row">
+        <button class="ctrl active" id="toggleTMRE">Hide TMRE</button>
+      </div>
+
+    </div>
+
+    <!-- ===================== QUANTIFICATION ===================== -->
+    <div class="tab-panel" id="panel-quant" style="display:none;">
+
+      <div class="quant-image">
+        <img src="assets/mitochondrial-membrane-potential/images/quantification.png" alt="Quantification of mitochondrial membrane potential across dose and timepoint" />
+      </div>
+
+      <div class="info-box">
+        <h3>Quantification</h3>
+        <p>
+          Quantitative analysis of mitochondrial membrane potential across treatment
+          doses and timepoints, normalized to control.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer">
+  <div class="wrap">
+    <span>Lateral Line Lab</span>
+    <span>Mitochondrial membrane potential</span>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script>
+/* ============================================================
+   Main tabs
+   ============================================================ */
+
+const mainTabButtons = document.querySelectorAll('#main-tabs button');
+const panels = {
+  tmre: document.getElementById('panel-tmre'),
+  quant: document.getElementById('panel-quant'),
+};
+
+mainTabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    mainTabButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.entries(panels).forEach(([key, el]) => {
+      el.style.display = key === btn.dataset.tab ? 'block' : 'none';
+    });
+  });
+});
+
+/* ============================================================
+   TMRE model data
+   ============================================================ */
+
+const MODEL_BASE = 'assets/mitochondrial-membrane-potential/models';
+
+const timepoints = {
+  '0HR': [
+    { name: `${MODEL_BASE}/DMSO_0HR.glb`, label: 'DMSO' },
+    { name: `${MODEL_BASE}/100_0HR.glb`, label: '100 µM' },
+    { name: `${MODEL_BASE}/300_0HR.glb`, label: '300 µM' },
+  ],
+  '6HR': [
+    { name: `${MODEL_BASE}/DMSO_max.glb`, label: 'DMSO' },
+    { name: `${MODEL_BASE}/100_6HR.glb`, label: '100 µM' },
+    { name: `${MODEL_BASE}/300_6HR.glb`, label: '300 µM' },
+  ],
+  '24HR': [
+    { name: `${MODEL_BASE}/DMSO_24HR.glb`, label: 'DMSO' },
+    { name: `${MODEL_BASE}/100_24HR.glb`, label: '100 µM' },
+    { name: `${MODEL_BASE}/300_24HR.glb`, label: '300 µM' },
+  ],
+  '72HR': [
+    { name: `${MODEL_BASE}/DMSO_72HR.glb`, label: 'DMSO' },
+    { name: `${MODEL_BASE}/100_72HR.glb`, label: '100 µM' },
+    { name: `${MODEL_BASE}/300_72HR.glb`, label: '300 µM' },
+  ],
+  '96HR': [
+    { name: `${MODEL_BASE}/DMSO_96HR.glb`, label: 'DMSO' },
+    { name: `${MODEL_BASE}/100_96HR.glb`, label: '100 µM' },
+    { name: `${MODEL_BASE}/300_96HR.glb`, label: '300 µM' },
+  ],
+};
+
+let currentTimepoint = '0HR';
+let currentDoseLabel = 'DMSO';
+
+const viewer = document.getElementById('viewer');
+const tpButtonsDiv = document.getElementById('timepoint-buttons');
+const doseButtonsDiv = document.getElementById('dose-buttons');
+
+Object.keys(timepoints).forEach((tp) => {
+  const btn = document.createElement('button');
+  btn.className = 'ctrl';
+  btn.textContent = tp;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#timepoint-buttons button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTimepoint = tp;
+    renderDoseButtons();
+  });
+  tpButtonsDiv.appendChild(btn);
+});
+
+function renderDoseButtons() {
+  doseButtonsDiv.innerHTML = '';
+  timepoints[currentTimepoint].forEach((model, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'ctrl';
+    btn.textContent = model.label;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#dose-buttons button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentDoseLabel = model.label;
+      viewer.src = model.name;
+      acquireTMREMaterials();
+    });
+    if (idx === 0) btn.classList.add('active');
+    doseButtonsDiv.appendChild(btn);
+  });
+
+  currentDoseLabel = timepoints[currentTimepoint][0].label;
+  viewer.src = timepoints[currentTimepoint][0].name;
+}
+
+/* ============================================================
+   TMRE visibility toggle
+   ============================================================ */
+
+const TMRE_MATERIAL_NAME = 'TMRE_Mat';
+let tmreVisible = true;
+let tmreMaterials = [];
+
+function getTMREAlpha(dose, timepoint) {
+  if (dose === 'DMSO') return 0.2;
+  if (timepoint === '0HR') {
+    if (dose === '100 µM') return 0.5;
+    if (dose === '300 µM') return 0.36;
+  }
+  return 0.1;
+}
+
+function acquireTMREMaterials() {
+  if (!viewer.model) {
+    requestAnimationFrame(acquireTMREMaterials);
+    return;
+  }
+  tmreMaterials = [];
+  const mat = viewer.model.getMaterialByName(TMRE_MATERIAL_NAME);
+  if (mat) tmreMaterials.push(mat);
+  applyTMREVisibility();
+}
+
+function applyTMREVisibility() {
+  const alpha = getTMREAlpha(currentDoseLabel, currentTimepoint);
+  tmreMaterials.forEach((mat) => {
+    const base = mat.pbrMetallicRoughness.baseColorFactor;
+    mat.setAlphaMode('BLEND');
+    mat.pbrMetallicRoughness.setBaseColorFactor([base[0], base[1], base[2], tmreVisible ? alpha : 0]);
+  });
+  viewer.requestUpdate();
+}
+
+viewer.addEventListener('load', acquireTMREMaterials);
+
+document.getElementById('toggleTMRE').addEventListener('click', (e) => {
+  tmreVisible = !tmreVisible;
+  applyTMREVisibility();
+  e.target.textContent = tmreVisible ? 'Hide TMRE' : 'Show TMRE';
+});
+
+/* INITIAL STATE */
+tpButtonsDiv.querySelector('button')?.classList.add('active');
+renderDoseButtons();
+</script>
+
+</body>
+</html>
