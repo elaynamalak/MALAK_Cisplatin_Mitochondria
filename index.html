@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lateral Line Lab — Cisplatin, Hair Cells & Mitochondria</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="hero-copy">
+    <h1>Watching a hair cell die, and some survive.</h1>
+    <p class="lede">
+      Cisplatin is a life-saving chemotherapy drug with a lasting cost: it destroys the
+      sensory hair cells the ear relies on for hearing, and in mammals those cells never
+      grow back. This site follows what happens inside hair cells after cisplatin exposure —
+      from cell death itself down to the shape, motion, and membrane potential of their
+      mitochondria — across a range of doses and recovery timepoints.
+    </p>
+    <p class="lede">
+      Everything here comes from the zebrafish lateral line, a small external sensory
+      system that lets us image living hair cells directly.
+    </p>
+  </div>
+
+  <div class="hero-visual">
+    <div class="image-slot main">
+      <div class="slot-copy">
+        <strong>Zebrafish, whole-animal view</strong>
+        Add a full-body zebrafish image here<br />
+        <em>images/zebrafish-overview.png</em>
+      </div>
+    </div>
+    <div class="image-slot inset">
+      <div class="slot-copy">
+        <strong>Neuromast, zoomed</strong>
+        Add a zoomed hair cell<br />cluster image here<br />
+        <em>images/neuromast-zoom.png</em>
+      </div>
+    </div>
+    <div class="inset-caption">A single neuromast, magnified</div>
+  </div>
+</section>
+
+<!-- ===================== THE PROBLEM ===================== -->
+<section class="section band-deep">
+  <div class="wrap two-col">
+    <div>
+      <p class="pull">
+        More than half of children treated with cisplatin develop permanent,
+        irreversible hearing loss.
+      </p>
+    </div>
+    <div>
+      <p>
+        Cisplatin is one of the most effective and widely used chemotherapy drugs, prescribed
+        for cancers ranging from testicular to ovarian to pediatric brain tumors. Its
+        side effect on hearing is well documented but poorly prevented: the drug is toxic
+        to the sensory hair cells inside the inner ear, the cells that convert sound
+        vibrations into the electrical signals the brain interprets as hearing.
+      </p>
+      <p>
+        Once those hair cells die, they do not regenerate in mammals. The hearing loss is
+        permanent, and it disproportionately affects children, who then have to grow up
+        and learn language with reduced hearing. Understanding exactly how cisplatin kills
+        hair cells — and why some cells resist while others don't — is a first step toward
+        protecting hearing during treatment rather than losing it.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== WHY ZEBRAFISH ===================== -->
+<section class="section">
+  <div class="wrap split reverse">
+    <div class="split-visual">
+      <div class="image-slot">
+        <div class="slot-copy">
+          <strong>Lateral line neuromast</strong>
+          Add a representative neuromast<br />or hair cell bundle image here<br />
+          <em>images/lateral-line-detail.png</em>
+        </div>
+      </div>
+    </div>
+    <div class="split-text section-text">
+      <h2>Why a fish?</h2>
+      <p>
+        Zebrafish carry hair cells in an external sensory system called the lateral line,
+        organized into small clusters called neuromasts. These hair cells are
+        functionally and molecularly similar to the ones inside the human inner ear —
+        but because they sit on the surface of the fish rather than buried in bone,
+        they can be imaged live, dosed with drugs, and tracked over time in a way that
+        would be impossible in a mammal.
+      </p>
+      <p>
+        That accessibility is what makes this dataset possible: the same hair cell,
+        and the mitochondria inside it, can be followed through damage and, in some
+        cases, recovery.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== EXPLORE THE DATA ===================== -->
+<section class="section">
+  <div class="wrap">
+    <h2 style="margin-bottom: 36px;">Explore the data</h2>
+
+    <div class="explore-list">
+
+      <div class="explore-item" data-accent="rust">
+        <div class="accent-bar"></div>
+        <div class="explore-item-body">
+          <div>
+            <h3>Hair Cell Death &amp; Recovery</h3>
+            <p>
+              Z-projection images of neuromasts across cisplatin concentrations and
+              recovery timepoints, with quantification of hair cell survival.
+            </p>
+          </div>
+          <a class="view-link" href="hair-cell-death-recovery.html">View section</a>
+        </div>
+      </div>
+
+      <div class="explore-item" data-accent="teal">
+        <div class="accent-bar"></div>
+        <div class="explore-item-body">
+          <div>
+            <h3>Mitochondrial Dynamics</h3>
+            <p>
+              3D timelapse models and video of mitochondrial fusion, fission, and donut
+              formation as hair cells respond to cisplatin.
+            </p>
+          </div>
+          <a class="view-link" href="mitochondrial-dynamics.html">View section</a>
+        </div>
+      </div>
+
+      <div class="explore-item" data-accent="gold">
+        <div class="accent-bar"></div>
+        <div class="explore-item-body">
+          <div>
+            <h3>Membrane Potential</h3>
+            <p>
+              TMRE-labeled 3D models showing mitochondrial membrane potential across
+              dose and timepoint, with quantification.
+            </p>
+          </div>
+          <a class="view-link" href="mitochondrial-membrane-potential.html">View section</a>
+        </div>
+      </div>
+
+      <div class="explore-item" data-accent="green">
+        <div class="accent-bar"></div>
+        <div class="explore-item-body">
+          <div>
+            <h3>Morphology</h3>
+            <p>
+              Z-projection images and 3D models of mitochondrial shape — including donut
+              formation — across dose and recovery.
+            </p>
+          </div>
+          <a class="view-link" href="mitochondrial-morphology.html">View section</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div id="site-footer">
+  <div class="wrap">
+    <span>Lateral Line Lab</span>
+    <span>Zebrafish cisplatin ototoxicity project</span>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+</body>
+</html>
